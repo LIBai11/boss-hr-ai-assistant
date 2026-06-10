@@ -41,6 +41,21 @@ npm run check:syntax
 npm run verify
 ```
 
+## Release 下载
+
+普通用户建议从 [GitHub Releases](https://github.com/LIBai11/boss-hr-ai-assistant/releases) 下载 `boss-hr-ai-assistant-vX.Y.Z.zip`。
+
+下载后解压，在 `chrome://extensions` 开启“开发者模式”，点击“加载已解压的扩展程序”，选择解压出的目录即可。
+
+维护者发布新版本前可以运行：
+
+```bash
+npm run verify
+npm run package:release
+```
+
+脚本会在 `dist/` 下生成可上传的扩展 zip 和 `SHA256SUMS.txt`。
+
 ## 自定义 AI
 
 扩展不内置 AI 服务。简历评级和话术生成只会调用用户在设置里填写的自定义 AI API。
