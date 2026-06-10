@@ -17,8 +17,8 @@
 1. 克隆仓库：
 
    ```bash
-   git clone https://github.com/LIBai11/bhp-extension.git
-   cd bhp-extension
+   git clone https://github.com/LIBai11/boss-hr-ai-assistant.git
+   cd boss-hr-ai-assistant
    ```
 
 2. 打开 Chrome 的扩展管理页：
