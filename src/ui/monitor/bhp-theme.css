@@ -1,0 +1,993 @@
+/* =========================================================
+   BHP — Refreshed design system
+   Drop-in replacement for the inline <style> blocks in
+   options.html and monitor.html. Preserves every existing
+   element id and class hook so options.js / monitor.js /
+   pause-ui.js continue to work unchanged.
+   ========================================================= */
+
+:root {
+  /* === Backwards-compat variable names (used by inline styles in HTML) === */
+  --bg-body:        oklch(0.985 0.003 250);
+  --bg-card:        #ffffff;
+  --bg-inner:       oklch(0.97 0.005 250);
+  --border:         oklch(0.92 0.006 250);
+  --text:           oklch(0.24 0.02 252);
+  --text-sec:       oklch(0.5 0.015 252);
+  --text-dim:       oklch(0.65 0.012 252);
+  --accent:         oklch(0.5 0.14 252);
+  --accent-bg:      oklch(0.95 0.04 252);
+  --green:          oklch(0.55 0.13 155);
+  --red:            oklch(0.58 0.17 25);
+  --btn-primary:        oklch(0.5 0.14 252);
+  --btn-primary-hover:  oklch(0.44 0.14 252);
+  --btn-danger-bg:      oklch(0.96 0.04 25);
+  --btn-danger:         oklch(0.58 0.17 25);
+
+  /* === New tokens === */
+  --bg-hover:       oklch(0.955 0.006 250);
+  --border-strong:  oklch(0.85 0.008 250);
+  --accent-text:    oklch(0.38 0.14 252);
+  --accent-hover:   oklch(0.44 0.14 252);
+  --success-soft:   oklch(0.95 0.04 155);
+  --warning:        oklch(0.7 0.13 75);
+  --warning-soft:   oklch(0.96 0.05 80);
+  --warning-text:   oklch(0.45 0.12 75);
+  --danger-soft:    oklch(0.96 0.04 25);
+
+  /* Grade colors — same lightness/chroma family, hue varied */
+  --grade-a:      oklch(0.55 0.13 155);
+  --grade-a-soft: oklch(0.95 0.05 155);
+  --grade-b:      oklch(0.5 0.14 252);
+  --grade-b-soft: oklch(0.95 0.04 252);
+  --grade-c:      oklch(0.6 0.13 65);
+  --grade-c-soft: oklch(0.96 0.06 75);
+  --grade-d:      oklch(0.58 0.17 25);
+  --grade-d-soft: oklch(0.96 0.04 25);
+
+  /* Radii & shadows */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-2: 0 8px 24px -8px rgba(15, 23, 42, 0.12);
+
+  /* Type */
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* === Dark mode (monitor.html only — has .dark class toggled by theme-init.js) === */
+.dark {
+  --bg-body:        oklch(0.18 0.012 252);
+  --bg-card:        oklch(0.22 0.014 252);
+  --bg-inner:       oklch(0.2 0.014 252);
+  --bg-hover:       oklch(0.26 0.014 252);
+  --border:         oklch(0.3 0.014 252);
+  --border-strong:  oklch(0.4 0.018 252);
+  --text:           oklch(0.95 0.005 252);
+  --text-sec:       oklch(0.78 0.012 252);
+  --text-dim:       oklch(0.62 0.014 252);
+  --accent:         oklch(0.72 0.14 252);
+  --accent-bg:      oklch(0.32 0.07 252);
+  --accent-text:    oklch(0.82 0.13 252);
+  --accent-hover:   oklch(0.78 0.14 252);
+  --green:          oklch(0.72 0.14 155);
+  --success-soft:   oklch(0.3 0.06 155);
+  --red:            oklch(0.72 0.16 25);
+  --danger-soft:    oklch(0.32 0.07 25);
+  --warning:        oklch(0.78 0.13 75);
+  --warning-soft:   oklch(0.32 0.07 75);
+  --warning-text:   oklch(0.82 0.13 75);
+  --btn-primary:        oklch(0.55 0.14 252);
+  --btn-primary-hover:  oklch(0.62 0.14 252);
+  --btn-danger-bg:      oklch(0.32 0.07 25);
+  --btn-danger:         oklch(0.78 0.16 25);
+
+  --grade-a:      oklch(0.72 0.14 155);
+  --grade-a-soft: oklch(0.3 0.06 155);
+  --grade-b:      oklch(0.72 0.14 252);
+  --grade-b-soft: oklch(0.3 0.06 252);
+  --grade-c:      oklch(0.78 0.13 65);
+  --grade-c-soft: oklch(0.32 0.07 65);
+  --grade-d:      oklch(0.72 0.16 25);
+  --grade-d-soft: oklch(0.32 0.07 25);
+}
+
+/* === Dark mode: nudge disabled states up so they remain legible === */
+.dark .btn-save:disabled,
+.dark .btn-stop:disabled,
+.dark .btn-sub:disabled,
+.dark .btn-action:disabled,
+.dark .byo-test-btn:disabled {
+  opacity: .7;
+}
+.dark .btn-stop:disabled,
+.dark .btn-sub:disabled {
+  border-color: var(--border-strong);
+}
+
+/* === Reset === */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-body);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* options.html body is centered with padding */
+body:has(.container) {
+  display: flex;
+  justify-content: center;
+  padding: 32px 20px 80px;
+}
+.container { width: 100%; max-width: 680px; }
+
+/* options.html h1 */
+h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+/* === Cards / sections === */
+.section,
+.settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 12px;
+}
+.section h2,
+.settings-section-title,
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings-section { padding: 16px 18px; }
+.settings-section-title { font-size: 14px; margin-bottom: 14px; }
+
+/* === Fields === */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label,
+.field > label,
+.field-label-text {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.field-hint, .hint {
+  font-size: 12px;
+  color: var(--text-sec);
+  line-height: 1.6;
+  margin-top: 4px;
+}
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; margin-bottom: 0; }
+
+/* === Inputs === */
+.field input[type="number"],
+.field input[type="text"],
+.field input[type="password"],
+.field-input,
+.byo-text-input,
+.byo-row input[type="text"],
+.byo-row input[type="password"] {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input[type="number"]:focus,
+.field input[type="text"]:focus,
+.field input[type="password"]:focus,
+.field-input:focus,
+.byo-text-input:focus,
+.byo-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.field input[type="number"] { width: 96px; font-variant-numeric: tabular-nums; }
+.byo-text-input { width: 100%; }
+
+.field textarea,
+.field-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-inner);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: none;
+  min-height: 68px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field textarea:focus,
+.field-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.field textarea.tall,
+.field-textarea.tall { min-height: 140px; }
+
+/* selects */
+.field select,
+select.bhp-vipf-radio,
+select.s-bhp-vipf-radio,
+#pf_salary, #s-pf-salary {
+  height: 34px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card)
+    url("data:image/svg+xml;charset=UTF-8,%3csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1 1l4 4 4-4' stroke='%23667085' stroke-width='1.5' fill='none' stroke-linecap='round'/%3e%3c/svg%3e")
+    right 12px center no-repeat;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field select:focus,
+select.bhp-vipf-radio:focus,
+select.s-bhp-vipf-radio:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+/* === Range slider === */
+.range-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 4px 0;
+}
+.range-row input[type="range"] {
+  flex: 1; min-width: 0;
+  appearance: none; -webkit-appearance: none;
+  height: 4px;
+  background: var(--bg-inner);
+  border-radius: 2px;
+  outline: none;
+}
+.range-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px;
+  background: var(--accent);
+  border: 2px solid var(--bg-card);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.range-row input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  background: var(--accent);
+  border: 2px solid var(--bg-card);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.range-value {
+  min-width: 64px; text-align: right;
+  color: var(--text); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+/* === Buttons — unified system === */
+/* Base */
+.btn-save, .btn-action, .btn-sub, .btn-settings-hd,
+.ctrl-btn, .preset-btn, .byo-test-btn,
+.detail-back-btn, .dl-btn, .run-expand, .sec-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, opacity .15s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Primary */
+.btn-save {
+  height: 38px;
+  padding: 0 22px;
+  background: var(--btn-primary);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 600;
+}
+.btn-save:hover:not(:disabled) { background: var(--btn-primary-hover); }
+.btn-save:disabled {
+  opacity: .6; cursor: not-allowed;
+}
+
+/* Action buttons (monitor) */
+.btn-action {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+}
+.btn-follow, .btn-proactive {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+.btn-follow:hover:not(:disabled),
+.btn-proactive:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--accent-bg), var(--accent) 12%);
+}
+.btn-follow.expanded, .btn-proactive.expanded {
+  background: var(--btn-primary);
+  color: #fff;
+}
+.btn-follow.expanded:hover:not(:disabled),
+.btn-proactive.expanded:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+}
+
+.btn-stop, .ctrl-btn.btn-stop {
+  height: 38px;
+  padding: 0 16px;
+  background: var(--btn-danger-bg);
+  color: var(--btn-danger);
+  border-radius: var(--r-md);
+  font-size: 13px; font-weight: 600;
+}
+.btn-stop:hover:not(:disabled) { opacity: .85; }
+.btn-stop:disabled { opacity: .55; cursor: not-allowed; }
+
+.btn-resume {
+  height: 38px;
+  background: var(--warning);
+  color: #fff;
+  width: 100%;
+  margin-top: 8px;
+  border-radius: var(--r-md);
+  font-size: 13.5px; font-weight: 700;
+  border: none;
+}
+.btn-resume:hover:not(:disabled) { opacity: .9; }
+.btn-resume:disabled { opacity: .6; cursor: not-allowed; }
+.dark .btn-resume:disabled { opacity: .7; }
+
+/* Sub buttons (mode picker rows) */
+.btn-sub {
+  height: 34px;
+  padding: 0 10px;
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.btn-sub:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--accent-bg);
+}
+.btn-sub:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Secondary header buttons */
+.btn-settings-hd {
+  height: 28px;
+  padding: 0 12px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.btn-settings-hd:hover { background: color-mix(in oklch, var(--accent-bg), var(--accent) 15%); }
+.btn-settings-hd.active { background: var(--btn-primary); color: #fff; }
+
+/* Preset chips */
+.preset-row {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 6px; margin: 6px 0;
+}
+.preset-label {
+  font-size: 12px; color: var(--text-sec); font-weight: 600;
+  margin-right: 2px;
+}
+.preset-btn {
+  height: 24px;
+  padding: 0 10px;
+  background: var(--bg-inner);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+}
+.preset-btn:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-bg); }
+.preset-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* BYO test btn */
+.byo-test-btn {
+  height: 32px;
+  padding: 0 16px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+}
+.byo-test-btn:hover:not(:disabled) { background: color-mix(in oklch, var(--accent-bg), var(--accent) 12%); }
+.byo-test-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.detail-back-btn {
+  height: 28px;
+  background: transparent;
+  border: none;
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 6px;
+}
+.detail-back-btn:hover { color: var(--text); }
+
+.dl-btn {
+  height: 24px;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  color: var(--accent-text);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.dl-btn:hover { color: var(--text); }
+
+.run-expand, .sec-toggle {
+  background: transparent; border: none;
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 4px;
+}
+.run-expand:hover, .sec-toggle:hover { color: var(--text); }
+
+/* ============================================================
+   FILTER CHIPS — style label-wrapped checkboxes as pill chips
+   Hits: .pf-edu-cb, .pf-intention-cb, .pf-exp-cb, .bhp-vipf-cb
+   (options.html) + same with s- prefix (monitor.html)
+   ============================================================ */
+#pf_edu label, #pf_intention label, #pf_experience label, #pf_callPhone label,
+#s-pf-edu label, #s-pf-intention label, #s-pf-experience label, #s-pf-callPhone label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0 !important;
+  height: 30px;
+  padding: 0 12px !important;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+  color: var(--text-sec);
+  font-size: 12.5px !important;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+  white-space: nowrap;
+}
+/* VIP filter chips — separated to avoid :has() poisoning the basic rule */
+#vip_filters_block label:has(input[type="checkbox"].bhp-vipf-cb),
+#s-vip_filters_block label:has(input[type="checkbox"].s-bhp-vipf-cb) {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0 !important;
+  height: 30px;
+  padding: 0 12px !important;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+  color: var(--text-sec);
+  font-size: 12.5px !important;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+  white-space: nowrap;
+}
+#pf_edu label:hover, #pf_intention label:hover, #pf_experience label:hover, #pf_callPhone label:hover,
+#s-pf-edu label:hover, #s-pf-intention label:hover, #s-pf-experience label:hover, #s-pf-callPhone label:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+#vip_filters_block label:has(input[type="checkbox"].bhp-vipf-cb):hover,
+#s-vip_filters_block label:has(input[type="checkbox"].s-bhp-vipf-cb):hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+#pf_edu label:has(input:checked),
+#pf_intention label:has(input:checked),
+#pf_experience label:has(input:checked),
+#pf_callPhone label:has(input:checked),
+#s-pf-edu label:has(input:checked),
+#s-pf-intention label:has(input:checked),
+#s-pf-experience label:has(input:checked),
+#s-pf-callPhone label:has(input:checked) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+#vip_filters_block label:has(input[type="checkbox"].bhp-vipf-cb):has(input:checked),
+#s-vip_filters_block label:has(input[type="checkbox"].s-bhp-vipf-cb):has(input:checked) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+/* Hide the native checkbox inside chip-styled labels */
+.pf-edu-cb, .pf-intention-cb, .pf-exp-cb, .bhp-vipf-cb,
+.s-pf-edu-cb, .s-pf-intention-cb, .s-pf-exp-cb, .s-bhp-vipf-cb {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Chip group containers — better spacing */
+#pf_edu, #pf_intention, #pf_experience, #pf_callPhone,
+#s-pf-edu, #s-pf-intention, #s-pf-experience, #s-pf-callPhone {
+  gap: 6px !important;
+  margin-top: 4px;
+}
+
+/* === Filter section grouping (options.html .field with grid) === */
+.section .field > div[style*="grid-template-columns"],
+.settings-section .field > div[style*="grid-template-columns"] {
+  gap: 14px !important;
+}
+.section .field > div[style*="grid-template-columns"] > div > div[style*="color:#555"],
+.section .field > div[style*="grid-template-columns"] > div > div[style*="color:var(--text-sec)"],
+.settings-section .field > div[style*="grid-template-columns"] > div > div[style*="color:var(--text-sec)"] {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--text-sec) !important;
+  margin-bottom: 6px !important;
+}
+
+/* ============================================================
+   GRADE TILES — A/B/C/D big tappable squares
+   Hits: .grade-cb, .s-grade-cb inside .grade-checks
+   ============================================================ */
+.grade-checks {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.grade-checks label:has(.grade-cb),
+.grade-checks label:has(.s-grade-cb) {
+  display: inline-flex !important;
+  align-items: center; justify-content: center;
+  gap: 0 !important;
+  width: 56px; height: 44px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-sec);
+  border-radius: var(--r-md);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.grade-checks label:has(.grade-cb):hover,
+.grade-checks label:has(.s-grade-cb):hover {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+}
+/* Hide the native checkbox; show only the letter via the label's text */
+.grade-cb, .s-grade-cb {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important; height: 0 !important;
+}
+/* Each grade selected state */
+.grade-checks label:has(.grade-cb[value="A"]:checked),
+.grade-checks label:has(.s-grade-cb[value="A"]:checked) {
+  background: var(--grade-a-soft); color: var(--grade-a); border-color: var(--grade-a);
+}
+.grade-checks label:has(.grade-cb[value="B"]:checked),
+.grade-checks label:has(.s-grade-cb[value="B"]:checked) {
+  background: var(--grade-b-soft); color: var(--grade-b); border-color: var(--grade-b);
+}
+.grade-checks label:has(.grade-cb[value="C"]:checked),
+.grade-checks label:has(.s-grade-cb[value="C"]:checked) {
+  background: var(--grade-c-soft); color: var(--grade-c); border-color: var(--grade-c);
+}
+.grade-checks label:has(.grade-cb[value="D"]:checked),
+.grade-checks label:has(.s-grade-cb[value="D"]:checked) {
+  background: var(--grade-d-soft); color: var(--grade-d); border-color: var(--grade-d);
+}
+
+/* ============================================================
+   SWITCHES — style "enable" checkboxes as iOS-style switches
+   Targets specific known toggles to avoid hitting chip checkboxes
+   ============================================================ */
+#school_enabled, #company_enabled, #pro_school_enabled, #pro_company_enabled,
+#thank_on_fail_enabled, #invite_on_pass_enabled,
+#byo_skip_probe,
+#s-school-enabled, #s-company-enabled, #s-pro-school-enabled, #s-pro-company-enabled,
+#s-thank-on-fail-enabled, #s-invite-on-pass-enabled,
+#s-byo-skip-probe,
+#s-auto-download-log, #s-debug-enabled, #sniffer-strip {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 34px !important;
+  height: 20px !important;
+  /* background-color is forced transparent on checkboxes in Chrome — use background-image */
+  background-image: linear-gradient(var(--border-strong), var(--border-strong));
+  border-radius: var(--r-pill);
+  border: none;
+  cursor: pointer;
+  transition: background-image .15s;
+  flex-shrink: 0;
+  margin: 0;
+  vertical-align: middle;
+}
+#school_enabled::after, #company_enabled::after,
+#pro_school_enabled::after, #pro_company_enabled::after,
+#thank_on_fail_enabled::after, #invite_on_pass_enabled::after,
+#byo_skip_probe::after,
+#s-school-enabled::after, #s-company-enabled::after,
+#s-pro-school-enabled::after, #s-pro-company-enabled::after,
+#s-thank-on-fail-enabled::after, #s-invite-on-pass-enabled::after,
+#s-byo-skip-probe::after,
+#s-auto-download-log::after, #s-debug-enabled::after, #sniffer-strip::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+#school_enabled:checked, #company_enabled:checked,
+#pro_school_enabled:checked, #pro_company_enabled:checked,
+#thank_on_fail_enabled:checked, #invite_on_pass_enabled:checked,
+#byo_skip_probe:checked,
+#s-school-enabled:checked, #s-company-enabled:checked,
+#s-pro-school-enabled:checked, #s-pro-company-enabled:checked,
+#s-thank-on-fail-enabled:checked, #s-invite-on-pass-enabled:checked,
+#s-byo-skip-probe:checked,
+#s-auto-download-log:checked, #s-debug-enabled:checked, #sniffer-strip:checked {
+  background-image: linear-gradient(var(--accent), var(--accent));
+}
+#school_enabled:checked::after, #company_enabled:checked::after,
+#pro_school_enabled:checked::after, #pro_company_enabled:checked::after,
+#thank_on_fail_enabled:checked::after, #invite_on_pass_enabled:checked::after,
+#byo_skip_probe:checked::after,
+#s-school-enabled:checked::after, #s-company-enabled:checked::after,
+#s-pro-school-enabled:checked::after, #s-pro-company-enabled:checked::after,
+#s-thank-on-fail-enabled:checked::after, #s-invite-on-pass-enabled:checked::after,
+#s-byo-skip-probe:checked::after,
+#s-auto-download-log:checked::after, #s-debug-enabled:checked::after, #sniffer-strip:checked::after {
+  transform: translateX(14px);
+}
+
+/* Check-row containers (the "switch + label" rows) */
+.check-row, .check-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 8px;
+}
+.check-row label, .check-label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+  margin: 0 !important;
+  cursor: pointer;
+}
+
+/* === Radio button (auto/openai/anthropic/gemini, reply mode, pdf mode) ===
+   Style them as round indicators with a clean ring */
+.byo-protocols input[type="radio"],
+input[type="radio"][name^="byo"],
+input[type="radio"][name^="s-byo"],
+input[type="radio"][name="reply_mode"],
+input[type="radio"][name="s-reply-mode"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-card);
+  cursor: pointer;
+  margin: 0;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: border-color .15s;
+}
+.byo-protocols input[type="radio"]:checked,
+input[type="radio"][name^="byo"]:checked,
+input[type="radio"][name^="s-byo"]:checked,
+input[type="radio"][name="reply_mode"]:checked,
+input[type="radio"][name="s-reply-mode"]:checked {
+  border-color: var(--accent);
+  border-width: 5px;
+}
+.byo-protocols { display: flex; flex-wrap: wrap; gap: 16px; padding: 4px 0; }
+.byo-protocols label { display: flex !important; align-items: center; gap: 6px; font-size: 13px !important; cursor: pointer; }
+
+/* Reply-mode rows inside invite-on-pass-field (options.html) */
+#invite-on-pass-field .check-row,
+#s-invite-on-pass-field .check-row,
+#s-invite-on-pass-field > label.check-label {
+  margin-bottom: 6px;
+}
+
+/* === BYO advanced toggle === */
+.byo-advanced-toggle {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12.5px; color: var(--text-sec); font-weight: 600;
+  cursor: pointer; user-select: none;
+  margin-top: 14px;
+  padding: 4px 6px;
+  border-radius: var(--r-sm);
+}
+.byo-advanced-toggle:hover { color: var(--accent-text); background: var(--bg-inner); }
+.byo-advanced {
+  display: none;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.byo-advanced.open { display: block; }
+
+/* === BYO badge / warning === */
+.byo-badge, .log-tag {
+  display: inline-flex; align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.byo-badge-ok       { background: var(--success-soft); color: var(--green); }
+.byo-badge-warn     { background: var(--warning-soft); color: var(--warning-text); }
+.byo-badge-err      { background: var(--danger-soft); color: var(--red); }
+.byo-badge-unknown  { background: var(--bg-inner); color: var(--text-sec); }
+
+.byo-warning {
+  background: var(--warning-soft);
+  border: 1px solid color-mix(in oklch, var(--warning), transparent 40%);
+  color: var(--warning-text);
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin-top: 12px;
+}
+.byo-warning strong { font-weight: 600; }
+.byo-row { display: flex; align-items: center; gap: 10px; }
+
+/* === Save bar (sticky bottom for options.html) === */
+.btn-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* === Toast === */
+.toast {
+  position: fixed; top: 20px; right: 20px;
+  background: var(--text); color: var(--bg-card);
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 500;
+  display: none;
+  box-shadow: var(--shadow-2);
+  z-index: 1000;
+  animation: toast-in .2s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Scrollbars (subtle) === */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Smaller scrollbars in dense areas */
+.log-trail::-webkit-scrollbar, .run-detail::-webkit-scrollbar,
+.rating-list::-webkit-scrollbar, #rating-list-inline::-webkit-scrollbar {
+  width: 4px;
+}
+
+/* === Hide deprecated tweaks-page-only chrome === */
+.section h2 { color: var(--text); }
+
+/* === Responsive (container queries for monitor.html) === */
+@container (max-width: 380px) {
+  .info-trio { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ============================================================
+   Reply-mode field visibility (restored from old inline <style>)
+   ============================================================ */
+#invite-on-pass-field #msg-contact-field,
+#invite-on-pass-field #msg-contact-no-wechat-field { display: none; }
+#invite-on-pass-field:has(#reply_mode_wechat:checked) #msg-contact-field { display: block; }
+#invite-on-pass-field:has(#reply_mode_reply:checked) #msg-contact-no-wechat-field { display: block; }
+
+/* ============================================================
+   Textarea zoom editor
+   Click "⛶" → opens side-panel-sized modal for editing.
+   Wrap + button are injected at runtime (see options.html inline script).
+   ============================================================ */
+.ta-wrap { position: relative; }
+.ta-expand-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border: 1px solid color-mix(in oklch, var(--accent), transparent 50%);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  line-height: 1;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  transition: all .15s;
+}
+.ta-expand-btn:hover {
+  background: color-mix(in oklch, var(--accent-bg), var(--accent) 16%);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.ta-expand-btn:focus { outline: none; box-shadow: 0 0 0 3px var(--accent-bg); }
+.ta-expand-btn svg { display: block; pointer-events: none; flex-shrink: 0; }
+.ta-expand-btn-label { pointer-events: none; }
+
+/* draggable bottom-right grip — 24×24 click target, 13×13 icon centered, JS does the drag */
+.ta-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  cursor: ns-resize;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='4' y1='20' x2='20' y2='4'/%3e%3cline x1='11' y1='20' x2='20' y2='11'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 13px 13px;
+  opacity: 0.55;
+  transition: opacity .15s;
+  user-select: none;
+  z-index: 2;
+}
+.ta-grip:hover { opacity: 0.95; }
+.dark .ta-grip {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa5b4' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='4' y1='20' x2='20' y2='4'/%3e%3cline x1='11' y1='20' x2='20' y2='11'/%3e%3c/svg%3e");
+}
+
+/* lock matching textareas to identical height; edit via 缩放 modal */
+.field textarea.no-resize,
+.field-textarea.no-resize {
+  min-height: 100px;
+  height: 100px;
+}
+
+.ta-zoom-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(15, 23, 42, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  animation: ta-fade-in .15s ease-out;
+}
+.ta-zoom-backdrop.show { display: flex; }
+@keyframes ta-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.ta-zoom-modal {
+  width: calc(100vw - 16px);
+  height: calc(100vh - 16px);
+  max-width: 100vw;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ta-zoom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ta-zoom-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.ta-zoom-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  background: var(--bg-inner);
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.ta-zoom-close:hover { background: var(--bg-hover); color: var(--text); }
+.ta-zoom-textarea {
+  flex: 1;
+  width: 100%;
+  padding: 14px 16px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: var(--bg-card) !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+  font-family: inherit;
+  resize: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  outline: none !important;
+}
+.ta-zoom-textarea:focus {
+  box-shadow: none !important;
+}
+body.ta-zoom-active { overflow: hidden; }

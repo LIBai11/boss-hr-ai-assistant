@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script src="theme-init.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>招聘助手 - 运行控制台</title>
+  <link rel="stylesheet" href="bhp-theme.css">
+  <link rel="stylesheet" href="bhp-monitor.css">
+</head>
+<body>
+  <header class="sidepanel-titlebar">
+    <span>招聘助手 / 运行监控</span>
+    <div class="titlebar-actions">
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换深色或明亮模式" aria-pressed="false" title="切换深色或明亮模式">
+        <span class="theme-label" id="theme-label">明亮</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 控制台 -->
+  <div class="card top-card" id="logged-area" style="display:none;">
+    <div class="account-row">
+      <div class="brand-mark"><img class="brand-logo" src="../../assets/icons/icon48.png" alt="招聘助手图标"></div>
+      <div class="account-main">
+        <strong id="account-name">招聘账号</strong>
+        <span id="account-subtitle">本地扩展 · 自定义 AI · BOSS 页面自动化</span>
+      </div>
+      <button class="btn-settings-hd" id="btn-settings-hd" style="display:none;">招聘设置</button>
+    </div>
+
+    <div class="ready-strip">
+      <div class="ready-item"><span class="dot ok"></span>扩展<strong>本地</strong></div>
+      <div class="ready-item"><span class="dot err" id="boss-dot"></span>BOSS<strong id="boss-ready">检测中</strong></div>
+      <div class="ready-item"><span class="dot warn" id="byo-dot"></span>自定义 AI<strong id="byo-ready">未配置</strong></div>
+      <div class="ready-item"><span class="dot warn"></span>在线简历<strong id="proactive-cap-ready">--</strong></div>
+    </div>
+
+    <!-- 信息栏 -->
+    <div class="info-trio">
+      <div class="info-mini-inner">
+        <div class="info-title">BOSS 直聘</div>
+        <div class="info-val">
+          <span class="boss-user" id="boss-user">检测中...</span>
+        </div>
+      </div>
+      <div class="info-mini-inner">
+        <div class="info-title">今日用量</div>
+        <div class="info-val" id="top-usage">-</div>
+      </div>
+      <div class="info-mini-inner">
+        <div class="info-title">新招呼</div>
+        <div class="info-val" id="new-greet">-</div>
+      </div>
+      <div class="info-mini-inner">
+        <div class="info-title">自定义 AI 权限</div>
+        <div class="info-val" id="byo-summary">未配置</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card action-card" id="actions-card" style="display:none;">
+    <!-- 暂停 banner（仅 paused 时显示） -->
+    <div id="pause-banner" style="display:none;">
+      <span id="pause-banner-text">已暂停</span>
+      <button class="btn-mini" id="pause-resume-btn">继续</button>
+      <button class="btn-mini ghost" id="pause-clear-btn">放弃</button>
+    </div>
+
+    <div class="run-banner">
+      <strong id="run-mode-title">等待启动</strong>
+      <span id="run-mode-subtitle">选择跟进或牛人筛选后，将显示列表级进度和处理日志。</span>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div id="actions-area">
+      <div class="btn-row">
+        <button class="btn-action btn-follow" id="btn-follow">智能跟进 ▾</button>
+        <button class="btn-action btn-proactive" id="btn-proactive">牛人筛选 ▾</button>
+        <button class="ctrl-btn btn-stop" id="btn-stop" disabled>停止</button>
+      </div>
+      <div class="sub-actions" id="follow-options">
+        <button class="btn-sub" id="btn-new" title="只处理新招呼tab">处理新招呼</button>
+        <button class="btn-sub" id="btn-chat" title="只处理沟通中tab">处理沟通中</button>
+        <button class="btn-sub" id="btn-smart" title="先处理沟通中，再处理新招呼">智能处理</button>
+      </div>
+      <div class="sub-actions" id="proactive-options">
+        <button class="btn-sub" id="btn-pro-followup" title="扫描「我发起」未读，跟进已打招呼的牛人">牛人跟进</button>
+        <button class="btn-sub" id="btn-pro-greet" title="在推荐页筛选牛人并打招呼">给牛人打招呼</button>
+        <button class="btn-sub" id="btn-pro-smart" title="先跟进，再打招呼">智能筛选</button>
+        <div class="proactive-cap-hint" id="proactive-cap-line">今日已查看在线简历 <span id="proactive-cap-count">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今日统计 -->
+  <div class="card stats-card" id="stats-card-4" style="display:none;">
+    <div class="sec-hd">
+      <span class="sec-title">今日统计</span>
+      <span>Asia/Shanghai</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-cell" data-kind="processed" title="点击查看今日处理明细">
+        <div class="stat-label">今日处理</div>
+        <div class="stat-value" id="stat-processed">0</div>
+      </div>
+      <div class="stat-cell" data-kind="new" title="点击查看新招呼明细">
+        <div class="stat-label">新招呼</div>
+        <div class="stat-value ok" id="stat-new">0</div>
+      </div>
+      <div class="stat-cell" data-kind="chat" title="点击查看沟通中明细">
+        <div class="stat-label">沟通中</div>
+        <div class="stat-value" id="stat-chat">0</div>
+      </div>
+      <div class="stat-cell" data-kind="proactive" title="点击查看主动打招呼明细">
+        <div class="stat-label">主动打招呼</div>
+        <div class="stat-value ok" id="stat-proactive">0</div>
+      </div>
+      <div class="stat-cell" data-kind="rated" title="点击查看已AI评级明细">
+        <div class="stat-label">已AI评级</div>
+        <div class="stat-value" id="stat-rated">0</div>
+      </div>
+      <div class="stat-cell" data-kind="resume" title="点击查看已获取的附件简历明细">
+        <div class="stat-label">附件简历</div>
+        <div class="stat-value" id="stat-resume">0</div>
+      </div>
+      <div class="stat-cell" data-kind="top" title="点击查看优质候选人明细">
+        <div class="stat-label">优质候选人</div>
+        <div class="stat-value hot" id="stat-top">0</div>
+      </div>
+      <div class="stat-cell" data-kind="business-failed" title="点击查看业务不通过明细">
+        <div class="stat-label">业务不通过</div>
+        <div class="stat-value warn" id="stat-business-failed">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 招聘设置（全屏滑入页） -->
+  <div class="detail-overlay" id="settings-overlay" style="display:none;">
+    <div class="detail-overlay-hd">
+      <button class="detail-back-btn" id="settings-back-btn">&lt; 返回</button>
+      <div class="detail-overlay-title">招聘设置</div>
+      <button class="btn-settings-hd" type="button" id="settings-export-btn">导出</button>
+    </div>
+    <div class="detail-overlay-body settings-body">
+      <div class="ready-strip settings-ready-strip">
+        <div class="ready-item"><span class="dot ok"></span>扩展<strong>本地</strong></div>
+        <div class="ready-item"><span class="dot err" id="settings-boss-dot"></span>BOSS<strong id="settings-boss-ready">检测中</strong></div>
+        <div class="ready-item"><span class="dot warn" id="settings-byo-dot"></span>自定义 AI<strong id="settings-byo-ready">未配置</strong></div>
+        <div class="ready-item"><span class="dot warn"></span>简历<strong id="settings-proactive-cap-ready">--</strong></div>
+      </div>
+
+      <div class="settings-notice">主动筛选会记录今日已查看在线简历数量，用于运行监控。</div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">运行设置</div>
+        <div class="field">
+          <label>单次运行时长上限</label>
+          <div class="range-row">
+            <input type="range" id="s-run-time-limit-minutes" min="8" max="15" step="1" value="15">
+            <span class="range-value" id="s-run-time-limit-minutes-value">15 分钟</span>
+          </div>
+          <div class="field-hint">到达上限后，会在当前候选人处理完成后自动停止，避免长时间连续运行。</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">普通求职者筛选</div>
+        <div class="field">
+          <label>年龄上限（必要条件）</label>
+          <input type="number" class="field-input" id="s-age-max" min="18" max="60" value="30">
+          <div class="field-hint">年龄超过此值的候选人直接跳过（适用于新招呼、沟通中）</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="check-label"><input type="checkbox" id="s-school-enabled"> 启用学校白名单</label>
+            <div class="preset-row">
+              <span class="preset-label">快速添加：</span>
+              <button type="button" class="preset-btn" data-preset="985">985</button>
+              <button type="button" class="preset-btn" data-preset="211">211</button>
+              <button type="button" class="preset-btn" data-preset="syl">双一流</button>
+            </div>
+            <textarea class="field-textarea" id="s-schools" placeholder="每行一个学校名称"></textarea>
+          </div>
+          <div class="field">
+            <label class="check-label"><input type="checkbox" id="s-company-enabled"> 启用公司白名单</label>
+            <div class="preset-row">
+              <span class="preset-label">快速添加：</span>
+              <button type="button" class="preset-btn" data-company="game">游戏</button>
+              <button type="button" class="preset-btn" data-company="bigtech">大厂</button>
+            </div>
+            <textarea class="field-textarea" id="s-companies" placeholder="每行一个公司名称"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">牛人筛选设置</div>
+        <div class="field">
+          <label>年龄上限（必要条件）</label>
+          <input type="number" class="field-input" id="s-pro-age-max" min="18" max="60" value="30">
+          <div class="field-hint">推荐牛人中年龄超过此值的直接跳过</div>
+        </div>
+        <div class="field-row" id="s-pro-whitelist-row" style="display:none;">
+          <div class="field">
+            <label class="check-label"><input type="checkbox" id="s-pro-school-enabled"> 启用学校白名单</label>
+            <div class="preset-row">
+              <span class="preset-label">快速添加：</span>
+              <button type="button" class="preset-btn" data-pro-preset="985">985</button>
+              <button type="button" class="preset-btn" data-pro-preset="211">211</button>
+              <button type="button" class="preset-btn" data-pro-preset="syl">双一流</button>
+            </div>
+            <textarea class="field-textarea" id="s-pro-schools" placeholder="每行一个学校名称"></textarea>
+          </div>
+          <div class="field">
+            <label class="check-label"><input type="checkbox" id="s-pro-company-enabled"> 启用公司白名单</label>
+            <div class="preset-row">
+              <span class="preset-label">快速添加：</span>
+              <button type="button" class="preset-btn" data-pro-company="game">游戏</button>
+              <button type="button" class="preset-btn" data-pro-company="bigtech">大厂</button>
+            </div>
+            <textarea class="field-textarea" id="s-pro-companies" placeholder="每行一个公司名称"></textarea>
+          </div>
+        </div>
+        <div class="field">
+          <label>页面筛选条件（扫描前自动在 BOSS 页面上设置）</label>
+          <div class="field-hint" style="margin-bottom:8px;">选中的条件会在扫描牛人推荐前自动点选页面筛选器，从源头减少候选人数量</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">学历要求</div>
+              <div id="s-pf-edu" style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-pf-edu-cb" value="初中及以下"> 初中及以下</label>
+                <label><input type="checkbox" class="s-pf-edu-cb" value="中专/中技"> 中专/中技</label>
+                <label><input type="checkbox" class="s-pf-edu-cb" value="高中"> 高中</label>
+                <label><input type="checkbox" class="s-pf-edu-cb" value="大专"> 大专</label>
+                <label><input type="checkbox" class="s-pf-edu-cb" value="本科"> 本科</label>
+                <label><input type="checkbox" class="s-pf-edu-cb" value="硕士"> 硕士</label>
+                <label><input type="checkbox" class="s-pf-edu-cb" value="博士"> 博士</label>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">求职意向</div>
+              <div id="s-pf-intention" style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-pf-intention-cb" value="离职-随时到岗"> 离职-随时到岗</label>
+                <label><input type="checkbox" class="s-pf-intention-cb" value="在职-暂不考虑"> 在职-暂不考虑</label>
+                <label><input type="checkbox" class="s-pf-intention-cb" value="在职-考虑机会"> 在职-考虑机会</label>
+                <label><input type="checkbox" class="s-pf-intention-cb" value="在职-月内到岗"> 在职-月内到岗</label>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">薪资待遇（单选）</div>
+              <select id="s-pf-salary">
+                <option value="">不限</option>
+                <option value="3K以下">3K以下</option>
+                <option value="3-5K">3-5K</option>
+                <option value="5-10K">5-10K</option>
+                <option value="10-20K">10-20K</option>
+                <option value="20-50K">20-50K</option>
+                <option value="50K以上">50K以上</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">经验要求</div>
+              <div id="s-pf-experience" style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-pf-exp-cb" value="在校/应届"> 在校/应届</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="25年毕业"> 25年毕业</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="26年毕业"> 26年毕业</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="26年后毕业"> 26年后毕业</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="1年以内"> 1年以内</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="1-3年"> 1-3年</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="3-5年"> 3-5年</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="5-10年"> 5-10年</label>
+                <label><input type="checkbox" class="s-pf-exp-cb" value="10年以上"> 10年以上</label>
+              </div>
+            </div>
+            <div style="grid-column:span 2;">
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">是否可拨打电话</div>
+              <div id="s-pf-callPhone" style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="callPhone" value="可拨打"> 可拨打</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIP 高级筛选 -->
+        <div class="field" id="s-vip_filters_block" style="display:none;border-top:1px dashed var(--border);padding-top:14px;margin-top:14px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>VIP 高级筛选 <span style="color:var(--text-dim);font-size:11px;font-weight:400;">（仅 VIP 账号生效）</span></span>
+            <button type="button" id="s-vip_filters_refresh" class="btn-settings-hd">↻ 刷新岗位</button>
+          </label>
+          <div class="field-hint" style="margin-bottom:10px;" id="s-vip_filters_hint">扫描前自动应用至 BOSS 推荐牛人页面筛选器。专业 / 牛人关键词为岗位特定，需点"刷新"采集。</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">活跃度（单选）</div>
+              <select class="s-bhp-vipf-radio" data-key="activation">
+                <option value="">不限</option>
+                <option value="刚刚活跃">刚刚活跃</option>
+                <option value="今日活跃">今日活跃</option>
+                <option value="3日内活跃">3日内活跃</option>
+                <option value="本周活跃">本周活跃</option>
+                <option value="本月活跃">本月活跃</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">性别（单选）</div>
+              <select class="s-bhp-vipf-radio" data-key="gender">
+                <option value="">不限</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">距离（单选）</div>
+              <select class="s-bhp-vipf-radio" data-key="vip_distance">
+                <option value="">不限</option>
+                <option value="1km">1km</option>
+                <option value="3km">3km</option>
+                <option value="5km">5km</option>
+                <option value="7km">7km</option>
+                <option value="10km">10km</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">跳槽频率（单选）</div>
+              <select class="s-bhp-vipf-radio" data-key="switchJobFrequency">
+                <option value="">不限</option>
+                <option value="5年少于3份">5年少于3份</option>
+                <option value="平均每份工作大于1年">平均每份工作大于1年</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">近期没有看过</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="recentNotView" value="近14天没有"> 近14天没有</label>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">是否与同事交换简历</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="exchangeResumeWithColleague" value="近一个月没有"> 近一个月没有</label>
+              </div>
+            </div>
+            <div style="grid-column:span 2;">
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">院校</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="school" value="985"> 985</label>
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="school" value="211"> 211</label>
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="school" value="双一流院校"> 双一流院校</label>
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="school" value="留学"> 留学</label>
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="school" value="国内外名校"> 国内外名校</label>
+                <label><input type="checkbox" class="s-bhp-vipf-cb" data-key="school" value="公办本科"> 公办本科</label>
+              </div>
+            </div>
+            <div style="grid-column:span 2;">
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">专业 <span style="color:var(--text-dim);font-size:11px;font-weight:400;" id="s-vip_major_meta">（点"刷新"采集）</span></div>
+              <div id="s-vip_major_options" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;color:var(--text-dim);font-size:12px;align-items:center;">尚未采集</div>
+            </div>
+            <div style="grid-column:span 2;">
+              <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">牛人关键词 <span style="color:var(--text-dim);font-size:11px;font-weight:400;" id="s-vip_keyword1_meta">（点"刷新"采集）</span></div>
+              <div id="s-vip_keyword1_options" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;color:var(--text-dim);font-size:12px;align-items:center;">尚未采集</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>牛人跟进话术（对方回复后发送）</label>
+          <textarea class="field-textarea" id="s-pro-followup-msg" placeholder="主动打招呼后，对方回复时自动发送此消息"></textarea>
+        </div>
+      </div>
+
+      <div class="settings-section" id="message-template-section">
+        <div class="settings-section-title settings-section-title-row">
+          <span>话术模板</span>
+          <button type="button" class="btn-settings-hd" id="s-message-ai-generate">AI 生成</button>
+        </div>
+        <div class="field-hint message-ai-hint">使用已配置的自定义 AI 生成首次招呼、感谢、邀约和岗位关闭话术。生成后会填入下方文本框，需手动保存。</div>
+        <div class="field">
+          <label>首次招呼</label>
+          <textarea class="field-textarea" id="s-msg-greeting"></textarea>
+        </div>
+        <div class="field">
+          <label class="check-label"><input type="checkbox" id="s-thank-on-fail-enabled"> 评级未通过时，自动发送感谢话术</label>
+        </div>
+        <div class="field" id="s-thank-on-fail-field">
+          <textarea class="field-textarea" id="s-msg-thank"></textarea>
+        </div>
+        <div class="field">
+          <label class="check-label"><input type="checkbox" id="s-invite-on-pass-enabled"> 评级通过后，自动回复候选人</label>
+        </div>
+        <div class="field" id="s-invite-on-pass-field">
+          <label class="check-label" style="margin-bottom:6px;display:block;"><input type="radio" name="s-reply-mode" id="s-reply-mode-wechat" checked> 发送邀约话术并交换微信</label>
+          <label class="check-label" style="margin-bottom:10px;display:block;"><input type="radio" name="s-reply-mode" id="s-reply-mode-reply"> 仅回复候选人（不发起换微信）</label>
+          <input type="checkbox" id="s-exchange-wechat-enabled" style="display:none;">
+          <div id="s-msg-contact-field">
+            <label style="display:block;margin-bottom:6px;">交换微信话术</label>
+            <textarea class="field-textarea no-resize" id="s-msg-contact"></textarea>
+          </div>
+          <div id="s-msg-contact-no-wechat-field">
+            <label style="display:block;margin:10px 0 6px;">不交换微信话术</label>
+            <textarea class="field-textarea no-resize" id="s-msg-contact-no-wechat"></textarea>
+          </div>
+        </div>
+        <div class="field">
+          <label>岗位关闭拒绝语（岗位已关闭时发送）</label>
+          <textarea class="field-textarea" id="s-msg-job-closed"></textarea>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">AI 简历评级</div>
+        <div class="field">
+          <label>触发邀约的评级等级</label>
+          <div class="grade-checks">
+            <label><input type="checkbox" value="A" class="s-grade-cb"> A</label>
+            <label><input type="checkbox" value="B" class="s-grade-cb"> B</label>
+            <label><input type="checkbox" value="C" class="s-grade-cb"> C</label>
+            <label><input type="checkbox" value="D" class="s-grade-cb"> D</label>
+          </div>
+          <div class="field-hint">勾选的等级会触发发送邀约话术（按上方选择的"回复方式"决定是否换微信）</div>
+        </div>
+        <div class="field">
+          <div class="field-label-row">
+            <label>评级 Prompt（发给 AI 的指令）</label>
+            <button type="button" class="btn-settings-hd" id="s-rating-prompt-reset">恢复默认</button>
+          </div>
+          <textarea class="field-textarea tall" id="s-rating-prompt"></textarea>
+          <div class="field-hint">默认 Prompt 已要求 AI 返回 JSON。一般不需要修改；如需修改，仍必须要求返回 {"rating","summary","risk"} JSON。</div>
+          <div class="rating-example">
+            <span style="font-weight:500;">张三</span>
+            <span style="color:var(--text-sec);">高级前端工程师</span>
+            <span class="log-tag log-tag-b">B级</span>
+            <div class="log-rating-detail" style="color:var(--red);">缺乏大型项目架构经验，未体现团队管理能力。</div>
+            <div class="log-rating-detail">3年React开发经验，有完整的组件库建设经历，技术栈与岗位要求匹配度较高。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section" id="s-byo-section">
+        <div class="settings-section-title">自定义 AI</div>
+        <div id="s-byo-fields">
+          <div class="field">
+            <label>Base URL</label>
+            <input type="text" class="field-input byo-text-input" id="s-byo-url" placeholder="https://api.openai.com/v1">
+            <div class="field-hint">
+              <span id="s-byo-protocol-badge" class="byo-badge byo-badge-unknown" style="display:none;">协议:OpenAI</span>
+              <span style="margin-left:6px;">协议按域名自动判定；中转站默认按 OpenAI 兼容处理。</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>API Key</label>
+            <input type="password" class="field-input byo-text-input" id="s-byo-key" placeholder="sk-..." autocomplete="off">
+            <div class="field-hint">密钥仅保存在本机浏览器，只用于请求上方填写的 API。</div>
+          </div>
+          <div class="field">
+            <label>Model</label>
+            <input type="text" class="field-input byo-text-input" id="s-byo-model" placeholder="gpt-4o-mini / claude-sonnet-4 / gemini-2.0-flash">
+            <div class="field-hint">
+              <span id="s-byo-vision-hint" class="byo-badge byo-badge-unknown" style="display:none;">未识别为多模态</span>
+              <span style="margin-left:6px;">最终是否多模态以"测试连接"为准。</span>
+            </div>
+          </div>
+          <div class="field">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <button type="button" class="byo-test-btn" id="s-byo-test-btn">测试连接</button>
+              <span id="s-byo-test-result" class="byo-badge byo-badge-unknown" style="display:none;">未测试</span>
+            </div>
+            <div class="field-hint" id="s-byo-test-detail" style="margin-top:8px;"></div>
+          </div>
+
+          <div class="field" style="border-top:1px dashed var(--border);padding-top:12px;margin-top:12px;">
+            <span class="byo-advanced-toggle" id="s-byo-adv-toggle">▸ 高级（强制协议 / 自定义 header / PDF 模式 / 跳过探测）</span>
+          </div>
+          <div class="byo-advanced" id="s-byo-advanced">
+            <div class="field">
+              <label>强制接口协议</label>
+              <div class="byo-protocols">
+                <label><input type="radio" name="s-byo-force-protocol" value="auto" checked> 自动</label>
+                <label><input type="radio" name="s-byo-force-protocol" value="openai"> OpenAI 兼容</label>
+                <label><input type="radio" name="s-byo-force-protocol" value="anthropic"> Anthropic</label>
+                <label><input type="radio" name="s-byo-force-protocol" value="gemini"> Gemini</label>
+              </div>
+              <div class="field-hint">仅在自动判定不对时使用。</div>
+            </div>
+            <div class="field">
+              <label>自定义请求头（每行一对 <code>Key: Value</code>）</label>
+              <textarea class="field-textarea" id="s-byo-headers" placeholder="X-Custom-Header: value"></textarea>
+              <div class="field-hint">用于中转站 / coding plan 需要的额外认证或路由头。</div>
+            </div>
+            <div class="field">
+              <label>PDF 处理方式</label>
+              <div class="byo-protocols">
+                <label><input type="radio" name="s-byo-pdf-mode" value="auto" checked> 自动（推荐）</label>
+                <label><input type="radio" name="s-byo-pdf-mode" value="inline"> 强制直传</label>
+                <label><input type="radio" name="s-byo-pdf-mode" value="image"> 强制图模式</label>
+              </div>
+              <div class="field-hint">"自动"优先直传 PDF，遇到"不支持"会记录模型能力并中止本次评级。</div>
+            </div>
+            <div class="field">
+              <label class="check-label"><input type="checkbox" id="s-byo-skip-probe"> 跳过多模态探测（已知模型支持图片时使用）</label>
+            </div>
+          </div>
+
+          <div class="byo-warning">
+            AI 评级只会发送至上方填写的 API；密钥仅保存在本机。<br>
+            自定义 AI 调用失败会中止本次评级。<br>
+            如不清楚您的 API 是否支持多模态（识别图片/PDF），请咨询您 API 提供商的技术人员。
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">下载设置</div>
+        <div class="field">
+          <label class="check-label"><input type="checkbox" id="s-auto-download-log"> 处理完成后自动下载处理日志（.txt）</label>
+          <div class="field-hint">关闭后只保留在 Monitor 面板内查看，不再下载到本地</div>
+        </div>
+      </div>
+
+      <div class="settings-section" id="debug-section" style="display:none;border-top:1px dashed var(--border);padding-top:14px;margin-top:14px;">
+        <div class="section-title" style="color:var(--red);font-size:12px;letter-spacing:1px;">诊断日志</div>
+        <label class="check-label"><input type="checkbox" id="s-debug-enabled"> 页面请求诊断</label>
+        <div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6;">
+          P0: 记录页面请求状态（仅用于排查登录、跳转和接口异常）<br>
+          P1: 捕获 iframe postMessage 通信（仅用于排查页面桥接异常）
+        </div>
+      </div>
+
+      <div class="settings-save-bar">
+        <button class="btn-save" id="btn-save-settings">保存设置</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-toast" id="settings-toast"></div>
+
+  <!-- 状态（仅运行时显示） -->
+  <div class="card status-card" id="status-card" style="display:none;">
+    <div class="checkpoint-pipeline" id="pipeline-card" style="display:none;">
+      <div class="pipeline-head">
+        <span>列表级进度</span>
+        <span id="pipeline-cursor">列表检查点 0</span>
+      </div>
+      <div class="pipeline-steps" aria-label="列表级自动化进度">
+        <span class="pipe-step" id="pipe-scan">扫描</span>
+        <span class="pipe-step" id="pipe-filter">筛选</span>
+        <span class="pipe-step" id="pipe-resume">简历</span>
+        <span class="pipe-step" id="pipe-ai">AI</span>
+        <span class="pipe-step" id="pipe-send">发送</span>
+        <span class="pipe-step" id="pipe-record">记录</span>
+      </div>
+    </div>
+    <div class="status-main" id="status">等待启动...</div>
+    <div class="status-stats" id="stats"></div>
+    <div class="status-limit" id="status-run-limit"></div>
+    <div class="log-trail" id="log"></div>
+    <div class="log-resize-handle" id="log-resize" title="拖拽调整高度">
+      <span class="rh-bar"></span>
+    </div>
+  </div>
+
+  <!-- 今日记录 + 简历评级（双列） -->
+  <div class="cards-row">
+    <div class="card section-card" id="run-history">
+      <div class="sec-hd">
+        <span><span class="sec-title">今日记录</span><span class="sec-count" id="run-count"></span></span>
+        <button class="btn-settings-hd" id="btn-daily-summary">详情汇总</button>
+      </div>
+      <div id="run-list"><div class="empty-state">暂无今日记录</div></div>
+      <div class="run-detail" id="run-detail" style="display:none;"></div>
+    </div>
+
+    <div class="card section-card" id="rating-results" style="display:none;">
+      <div class="sec-hd">
+        <span><span class="sec-title">简历评级</span><span class="sec-count" id="rating-count"></span></span>
+        <button class="btn-settings-hd" id="rating-toggle">详情汇总</button>
+      </div>
+      <div class="rating-dist" id="rating-dist"></div>
+      <div id="rating-list-inline"></div>
+    </div>
+  </div>
+
+  <!-- 处理日志 -->
+  <div class="card section-card" id="dl-section" style="display:none;">
+    <div class="sec-hd">
+      <span class="sec-title">处理日志</span>
+    </div>
+    <div id="dl-list"></div>
+  </div>
+
+  <!-- 页面请求诊断（debug 模式开启后才显示） -->
+  <div class="card section-card" id="debug-log-card" style="display:none;">
+    <div class="sec-hd">
+      <span class="sec-title" style="color:var(--red);">页面请求诊断</span>
+      <span>
+        <button class="btn-settings-hd" id="btn-debug-pause">暂停</button>
+        <button class="btn-settings-hd" id="btn-debug-clear" style="margin-left:4px;">清空</button>
+      </span>
+    </div>
+    <div id="debug-log" style="max-height:400px;overflow-y:auto;font-size:11px;font-family:var(--font-mono);padding:8px 12px;line-height:1.65;"></div>
+  </div>
+
+  <!-- DOM 嗅探 -->
+  <div class="card section-card" id="sniffer-card" style="display:none;">
+    <div class="sec-hd">
+      <span class="sec-title" style="color:var(--red);">DOM 嗅探</span>
+      <span>
+        <button class="btn-settings-hd" id="sniffer-preset-filters">筛选器</button>
+        <button class="btn-settings-hd" id="sniffer-preset-cards" style="margin-left:4px;">卡片</button>
+        <button class="btn-settings-hd" id="sniffer-copy" style="margin-left:4px;">复制</button>
+        <button class="btn-settings-hd" id="sniffer-clear" style="margin-left:4px;">清空</button>
+      </span>
+    </div>
+    <div style="padding:10px 12px 6px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11px;">
+      <label>Root:</label>
+      <input id="sniffer-root" type="text" style="flex:1;min-width:180px;padding:6px 8px;font-family:var(--font-mono);font-size:11px;border:1px solid var(--border);border-radius:var(--r-sm);" value=".vip-filters-wrap, .filter-wrap">
+      <label>页面:</label>
+      <select id="sniffer-target" style="font-size:11px;padding:6px 8px;">
+        <option value="recommend">推荐牛人</option>
+        <option value="chat/index">沟通</option>
+        <option value="">全部 zhipin tab</option>
+      </select>
+      <label>深度:</label>
+      <input id="sniffer-depth" type="number" min="1" max="20" value="8" style="width:50px;font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);">
+      <label>上限:</label>
+      <input id="sniffer-max-roots" type="number" min="0" max="999" value="0" title="0 = 不限" style="width:50px;font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);">
+      <label><input type="checkbox" id="sniffer-strip" checked> 去空</label>
+      <button class="btn-save" id="sniffer-run" style="margin-left:auto;padding:0 16px;height:30px;font-size:12px;">嗅探</button>
+    </div>
+    <div id="sniffer-status" style="font-size:11px;color:var(--text-sec);padding:0 12px 6px;"></div>
+    <textarea id="sniffer-output" readonly style="display:block;width:calc(100% - 24px);box-sizing:border-box;margin:0 12px 12px;height:280px;font-family:var(--font-mono);font-size:11px;padding:8px;line-height:1.5;resize:vertical;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-inner);"></textarea>
+  </div>
+
+  <!-- 网络日志 -->
+  <div class="card section-card" id="netlog-section" style="display:none;">
+    <div class="sec-hd">
+      <span class="sec-title">网络日志</span>
+      <span>
+        <button class="btn-settings-hd" id="btn-netlog-load">加载</button>
+        <button class="btn-settings-hd" id="btn-netlog-clear" style="margin-left:4px;color:var(--red);">清除</button>
+      </span>
+    </div>
+    <div id="netlog-info" style="padding:8px 12px;font-size:12px;color:var(--text-sec);">点击「加载」查看上次被踢出前的 API 请求记录</div>
+    <div id="netlog-list" style="display:none;max-height:400px;overflow-y:auto;font-size:11px;font-family:var(--font-mono);padding:8px 12px;"></div>
+  </div>
+
+  <!-- Mockup 区域 -->
+  <div id="mockup-area">
+    <div class="mock-hint">以下为效果预览，开始处理后将显示真实数据</div>
+    <div class="cards-row">
+    <div class="card section-card mock-wrap">
+      <div class="sec-hd"><span><span class="sec-title">今日记录</span><span class="sec-count">(2/3)</span></span></div>
+      <div class="mock-content">
+        <div class="run-entry"><span class="run-inner"><span class="run-head"><span class="run-idx">&#9312;</span><span class="run-time">09:30 - 10:15</span></span><span class="run-stats">处理12人 打招呼8 过滤4</span></span></div>
+        <div class="run-entry"><span class="run-inner"><span class="run-head"><span class="run-idx">&#9313;</span><span class="run-time">14:00 - 14:45</span></span><span class="run-stats">处理8人 打招呼5 过滤3</span></span></div>
+      </div>
+    </div>
+    <div class="card section-card mock-wrap">
+      <div class="sec-hd"><span><span class="sec-title">简历评级</span><span class="sec-count">(3通过 / 2未通过)</span></span></div>
+      <div class="rating-dist">
+        <div class="rating-dist-row"><span class="rating-dist-label" style="color:var(--grade-a);">A</span><div class="rating-dist-bar"><div class="rating-dist-bar-fill rating-dist-fill-a" style="width:40%;"></div></div><span class="rating-dist-count">2</span></div>
+        <div class="rating-dist-row"><span class="rating-dist-label" style="color:var(--grade-b);">B</span><div class="rating-dist-bar"><div class="rating-dist-bar-fill rating-dist-fill-b" style="width:20%;"></div></div><span class="rating-dist-count">1</span></div>
+        <div class="rating-dist-row"><span class="rating-dist-label" style="color:var(--grade-c);">C</span><div class="rating-dist-bar"><div class="rating-dist-bar-fill rating-dist-fill-c" style="width:40%;"></div></div><span class="rating-dist-count">2</span></div>
+        <div class="rating-dist-row"><span class="rating-dist-label" style="color:var(--grade-d);">D</span><div class="rating-dist-bar"><div class="rating-dist-bar-fill rating-dist-fill-d" style="width:0%;"></div></div><span class="rating-dist-count">0</span></div>
+      </div>
+      <div class="mock-content">
+        <div style="color:var(--green);font-weight:600;margin-bottom:4px;">通过 (3)</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-dim);margin-right:6px;">09:32</span>
+          <span style="font-weight:500;">张某某</span>
+          <span style="color:var(--text-sec);">UI设计师</span>
+          <span class="log-tag log-tag-a">A级</span>
+        </div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-dim);margin-right:6px;">09:35</span>
+          <span style="font-weight:500;">李某某</span>
+          <span style="color:var(--text-sec);">游戏策划</span>
+          <span class="log-tag log-tag-b">B级</span>
+        </div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-dim);margin-right:6px;">14:10</span>
+          <span style="font-weight:500;">王某某</span>
+          <span style="color:var(--text-sec);">产品经理</span>
+          <span class="log-tag log-tag-a">A级</span>
+        </div>
+        <div style="color:var(--red);font-weight:600;margin:8px 0 4px;">未通过 (2)</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-dim);margin-right:6px;">09:40</span>
+          <span style="font-weight:500;">赵某某</span>
+          <span style="color:var(--text-sec);">前端开发</span>
+          <span class="log-tag log-tag-c">C级</span>
+        </div>
+        <div style="padding:4px 0;">
+          <span style="color:var(--text-dim);margin-right:6px;">14:20</span>
+          <span style="font-weight:500;">孙某某</span>
+          <span style="color:var(--text-sec);">运营</span>
+          <span class="log-tag log-tag-c">C级</span>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="card section-card mock-wrap">
+      <div class="sec-hd"><span class="sec-title">处理日志</span></div>
+      <div class="mock-content">
+        <div class="dl-entry"><span><span style="color:var(--accent-text);font-weight:600;margin-right:8px;">&#9312;</span><span class="dl-info">09:30 处理记录 12条</span></span><span class="dl-btn">&#11015; 下载</span></div>
+        <div class="dl-entry"><span><span style="color:var(--accent-text);font-weight:600;margin-right:8px;">&#9313;</span><span class="dl-info">14:00 处理记录 8条</span></span><span class="dl-btn">&#11015; 下载</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情全屏页 -->
+  <div class="detail-overlay" id="detail-overlay" style="display:none;">
+    <div class="detail-overlay-hd">
+      <button class="detail-back-btn" id="detail-back-btn">&lt; 返回</button>
+      <div class="detail-overlay-title" id="detail-overlay-title"></div>
+    </div>
+    <div class="detail-overlay-body" id="detail-overlay-body"></div>
+  </div>
+
+  <div class="settings-dialog-backdrop" id="ai-template-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ai-template-modal-title">
+    <div class="settings-dialog">
+      <div class="settings-dialog-title" id="ai-template-modal-title">需要先配置自定义 AI</div>
+      <div class="settings-dialog-body" id="ai-template-modal-body">填写 Base URL、API Key 和 Model 后，再使用 AI 生成话术。</div>
+      <div class="settings-dialog-actions">
+        <button type="button" class="btn-sub" id="ai-template-secondary">关闭</button>
+        <button type="button" class="btn-save" id="ai-template-primary">去配置</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ta-zoom-backdrop" id="ta-zoom-backdrop" role="dialog" aria-hidden="true">
+    <div class="ta-zoom-modal">
+      <div class="ta-zoom-header">
+        <span class="ta-zoom-title" id="ta-zoom-title">编辑</span>
+        <button type="button" class="ta-zoom-close" id="ta-zoom-close">✕ 关闭 (Esc)</button>
+      </div>
+      <textarea class="ta-zoom-textarea" id="ta-zoom-textarea" spellcheck="false"></textarea>
+    </div>
+  </div>
+
+  <script src="../../modules/page-api.js"></script>
+  <script src="monitor.js"></script>
+  <script src="pause-ui.js"></script>
+  <script src="ta-zoom.js"></script>
+</body>
+</html>

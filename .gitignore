@@ -1,0 +1,7 @@
+.DS_Store
+BHP 1.2.18 confusion/
+_metadata/
+dist/
+docs/
+node_modules/
+opendesign/

@@ -1,0 +1,29 @@
+{
+  "name": "bhp-extension",
+  "version": "1.3.0",
+  "description": "非官方 BOSS 直聘招聘辅助 Chrome 扩展",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LIBai11/bhp-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LIBai11/bhp-extension/issues"
+  },
+  "homepage": "https://github.com/LIBai11/bhp-extension#readme",
+  "keywords": [
+    "chrome-extension",
+    "manifest-v3",
+    "recruiting",
+    "boss-zhipin",
+    "custom-ai"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check:syntax": "node scripts/check-syntax.mjs",
+    "verify": "npm test && npm run check:syntax"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

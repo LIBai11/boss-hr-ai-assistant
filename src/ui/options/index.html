@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>BOSS直聘招聘辅助 - 设置</title>
+  <link rel="stylesheet" href="bhp-theme.css">
+</head>
+<body>
+  <div class="container">
+    <h1>招聘助手设置</h1>
+    <div style="font-size:12.5px;color:var(--text-sec);margin-bottom:24px;">BOSS直聘招聘辅助 · v1.3.0</div>
+
+    <div id="settings-area">
+
+    <div class="section">
+      <h2>运行设置</h2>
+      <div class="field">
+        <label>单次运行时长上限</label>
+        <div class="range-row">
+          <input type="range" id="run_time_limit_minutes" min="8" max="15" step="1" value="15">
+          <span class="range-value" id="run_time_limit_minutes_value">15 分钟</span>
+        </div>
+        <div class="hint">到达上限后，会在当前候选人处理完成后自动停止，避免长时间连续运行。</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>普通求职者筛选</h2>
+      <div class="field">
+        <label>年龄上限（必要条件）</label>
+        <input type="number" id="age_max" min="18" max="60" value="30">
+        <div class="hint">年龄超过此值的候选人直接跳过（适用于新招呼、沟通中）</div>
+      </div>
+      <div class="field">
+        <div class="check-row">
+          <input type="checkbox" id="school_enabled">
+          <label for="school_enabled">启用学校白名单筛选</label>
+        </div>
+        <textarea id="schools" placeholder="每行一个学校名称，如：&#10;清华大学&#10;北京大学&#10;复旦大学"></textarea>
+        <div class="hint">候选人学校在名单中才通过（子串匹配）</div>
+      </div>
+      <div class="field">
+        <div class="check-row">
+          <input type="checkbox" id="company_enabled">
+          <label for="company_enabled">启用公司白名单筛选</label>
+        </div>
+        <textarea id="companies" placeholder="每行一个公司名称，如：&#10;腾讯&#10;网易&#10;米哈游"></textarea>
+        <div class="hint">候选人公司在名单中才通过（子串匹配）。学校和公司满足其一即可</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>牛人筛选设置</h2>
+      <div class="field">
+        <label>年龄上限（必要条件）</label>
+        <input type="number" id="pro_age_max" min="18" max="60" value="30">
+        <div class="hint">推荐牛人中年龄超过此值的直接跳过</div>
+      </div>
+      <div class="field">
+        <div class="check-row">
+          <input type="checkbox" id="pro_school_enabled">
+          <label for="pro_school_enabled">启用学校白名单筛选</label>
+        </div>
+        <textarea id="pro_schools" placeholder="每行一个学校名称"></textarea>
+        <div class="hint">牛人学校在名单中才通过（子串匹配）</div>
+      </div>
+      <div class="field">
+        <div class="check-row">
+          <input type="checkbox" id="pro_company_enabled">
+          <label for="pro_company_enabled">启用公司白名单筛选</label>
+        </div>
+        <textarea id="pro_companies" placeholder="每行一个公司名称"></textarea>
+        <div class="hint">牛人公司在名单中才通过（子串匹配）。学校和公司满足其一即可</div>
+      </div>
+      <div class="field">
+        <label>牛人跟进话术（对方回复后发送）</label>
+        <textarea id="pro_followup_msg"></textarea>
+        <div class="hint">主动打招呼后，对方回复时自动发送此消息</div>
+      </div>
+      <div class="field">
+        <label>页面筛选条件（扫描前自动在 BOSS 页面上设置）</label>
+        <div class="hint" style="margin-bottom:10px;">选中的条件会在扫描牛人推荐前自动点选页面筛选器，从源头减少候选人数量</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">学历要求</div>
+            <div id="pf_edu" style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="pf-edu-cb" value="初中及以下"> 初中及以下</label>
+              <label><input type="checkbox" class="pf-edu-cb" value="中专/中技"> 中专/中技</label>
+              <label><input type="checkbox" class="pf-edu-cb" value="高中"> 高中</label>
+              <label><input type="checkbox" class="pf-edu-cb" value="大专"> 大专</label>
+              <label><input type="checkbox" class="pf-edu-cb" value="本科"> 本科</label>
+              <label><input type="checkbox" class="pf-edu-cb" value="硕士"> 硕士</label>
+              <label><input type="checkbox" class="pf-edu-cb" value="博士"> 博士</label>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">求职意向</div>
+            <div id="pf_intention" style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="pf-intention-cb" value="离职-随时到岗"> 离职-随时到岗</label>
+              <label><input type="checkbox" class="pf-intention-cb" value="在职-暂不考虑"> 在职-暂不考虑</label>
+              <label><input type="checkbox" class="pf-intention-cb" value="在职-考虑机会"> 在职-考虑机会</label>
+              <label><input type="checkbox" class="pf-intention-cb" value="在职-月内到岗"> 在职-月内到岗</label>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">薪资待遇（单选）</div>
+            <select id="pf_salary">
+              <option value="">不限</option>
+              <option value="3K以下">3K以下</option>
+              <option value="3-5K">3-5K</option>
+              <option value="5-10K">5-10K</option>
+              <option value="10-20K">10-20K</option>
+              <option value="20-50K">20-50K</option>
+              <option value="50K以上">50K以上</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">经验要求</div>
+            <div id="pf_experience" style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="pf-exp-cb" value="在校/应届"> 在校/应届</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="25年毕业"> 25年毕业</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="26年毕业"> 26年毕业</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="26年后毕业"> 26年后毕业</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="1年以内"> 1年以内</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="1-3年"> 1-3年</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="3-5年"> 3-5年</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="5-10年"> 5-10年</label>
+              <label><input type="checkbox" class="pf-exp-cb" value="10年以上"> 10年以上</label>
+            </div>
+          </div>
+          <div style="grid-column:span 2;">
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">是否可拨打电话</div>
+            <div id="pf_callPhone" style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="callPhone" value="可拨打"> 可拨打</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIP 高级筛选 -->
+      <div class="field" id="vip_filters_block" style="display:none;border-top:1px dashed var(--border);padding-top:16px;margin-top:16px;">
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          <span>VIP 高级筛选 <span style="color:var(--text-dim);font-size:11px;font-weight:400;">（仅 VIP 账号生效）</span></span>
+          <button type="button" class="btn-settings-hd" id="vip_filters_refresh">↻ 刷新岗位选项</button>
+        </label>
+        <div class="hint" style="margin-bottom:12px;" id="vip_filters_hint">扫描前自动应用至 BOSS 推荐牛人页面筛选器。专业 / 牛人关键词为岗位特定，需点"刷新"从当前打开的推荐牛人页采集。</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">活跃度（单选）</div>
+            <select class="bhp-vipf-radio" data-key="activation">
+              <option value="">不限</option>
+              <option value="刚刚活跃">刚刚活跃</option>
+              <option value="今日活跃">今日活跃</option>
+              <option value="3日内活跃">3日内活跃</option>
+              <option value="本周活跃">本周活跃</option>
+              <option value="本月活跃">本月活跃</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">性别（单选）</div>
+            <select class="bhp-vipf-radio" data-key="gender">
+              <option value="">不限</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">距离（单选）</div>
+            <select class="bhp-vipf-radio" data-key="vip_distance">
+              <option value="">不限</option>
+              <option value="1km">1km</option>
+              <option value="3km">3km</option>
+              <option value="5km">5km</option>
+              <option value="7km">7km</option>
+              <option value="10km">10km</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">跳槽频率（单选）</div>
+            <select class="bhp-vipf-radio" data-key="switchJobFrequency">
+              <option value="">不限</option>
+              <option value="5年少于3份">5年少于3份</option>
+              <option value="平均每份工作大于1年">平均每份工作大于1年</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">近期没有看过</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="recentNotView" value="近14天没有"> 近14天没有</label>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">是否与同事交换简历</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="exchangeResumeWithColleague" value="近一个月没有"> 近一个月没有</label>
+            </div>
+          </div>
+          <div style="grid-column:span 2;">
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">院校</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="school" value="985"> 985</label>
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="school" value="211"> 211</label>
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="school" value="双一流院校"> 双一流院校</label>
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="school" value="留学"> 留学</label>
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="school" value="国内外名校"> 国内外名校</label>
+              <label><input type="checkbox" class="bhp-vipf-cb" data-key="school" value="公办本科"> 公办本科</label>
+            </div>
+          </div>
+          <div style="grid-column:span 2;">
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">专业 <span style="color:var(--text-dim);font-size:11px;font-weight:400;" id="vip_major_meta">（点"刷新"从推荐牛人页采集）</span></div>
+            <div id="vip_major_options" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;color:var(--text-dim);font-size:12px;align-items:center;">尚未采集</div>
+          </div>
+          <div style="grid-column:span 2;">
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:6px;font-weight:500;">牛人关键词 <span style="color:var(--text-dim);font-size:11px;font-weight:400;" id="vip_keyword1_meta">（点"刷新"从推荐牛人页采集）</span></div>
+            <div id="vip_keyword1_options" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;color:var(--text-dim);font-size:12px;align-items:center;">尚未采集</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>话术模板</h2>
+      <div class="field">
+        <label>首次招呼</label>
+        <textarea id="msg_greeting"></textarea>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="thank_on_fail_enabled">
+        <label for="thank_on_fail_enabled">评级未通过时，自动发送感谢话术</label>
+      </div>
+      <div class="field" id="thank-on-fail-field">
+        <textarea id="msg_thank"></textarea>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="invite_on_pass_enabled">
+        <label for="invite_on_pass_enabled">评级通过后，自动回复候选人</label>
+      </div>
+      <div class="field" id="invite-on-pass-field">
+        <div class="check-row" style="margin-bottom:6px;">
+          <input type="radio" name="reply_mode" id="reply_mode_wechat" checked>
+          <label for="reply_mode_wechat">发送邀约话术并交换微信</label>
+        </div>
+        <div class="check-row" style="margin-bottom:10px;">
+          <input type="radio" name="reply_mode" id="reply_mode_reply">
+          <label for="reply_mode_reply">仅回复候选人（不发起换微信）</label>
+        </div>
+        <input type="checkbox" id="exchange_wechat_enabled" style="display:none;">
+        <div id="msg-contact-field">
+          <label style="display:block;margin-bottom:6px;">交换微信话术</label>
+          <textarea id="msg_contact" class="no-resize"></textarea>
+        </div>
+        <div id="msg-contact-no-wechat-field">
+          <label style="display:block;margin:10px 0 6px;">不交换微信话术</label>
+          <textarea id="msg_contact_no_wechat" class="no-resize"></textarea>
+        </div>
+      </div>
+      <div class="field">
+        <label>岗位关闭拒绝语（岗位已关闭时发送）</label>
+        <textarea id="msg_job_closed"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>AI 简历评级</h2>
+      <div class="field">
+        <label>触发邀约的评级等级</label>
+        <div class="grade-checks">
+          <label><input type="checkbox" value="A" class="grade-cb"> A</label>
+          <label><input type="checkbox" value="B" class="grade-cb"> B</label>
+          <label><input type="checkbox" value="C" class="grade-cb"> C</label>
+          <label><input type="checkbox" value="D" class="grade-cb"> D</label>
+        </div>
+        <div class="hint">勾选的等级会触发发送邀约话术（按上方选择的"回复方式"决定是否换微信）</div>
+      </div>
+      <div class="field">
+        <label>评级 Prompt（发给 AI 的指令）</label>
+        <textarea id="rating_prompt" class="tall"></textarea>
+        <div class="hint">设置好提示词后，处理简历时会按以下格式输出候选人评级结果：</div>
+        <div style="margin-top:10px;padding:12px 14px;border-radius:6px;background:var(--bg-inner);border:1px solid var(--border);line-height:1.7;font-size:12px;">
+          <span style="font-weight:500;">张三</span>
+          <span style="color:var(--text-sec);">高级前端工程师</span>
+          <span class="byo-badge byo-badge-ok" style="background:var(--grade-b-soft);color:var(--grade-b);">B级</span>
+          <div style="margin-top:6px;font-size:12px;color:var(--red);">缺乏大型项目架构经验，未体现团队管理能力。</div>
+          <div style="margin-top:2px;font-size:12px;color:var(--text-sec);">3年React开发经验，有完整的组件库建设经历，技术栈与岗位要求匹配度较高。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>自定义 AI</h2>
+
+      <div id="byo-fields">
+        <div class="field">
+          <label>Base URL</label>
+          <input type="text" id="byo_url" placeholder="https://api.openai.com/v1">
+          <div class="hint">
+            <span id="byo_protocol_badge" class="byo-badge byo-badge-unknown" style="display:none;">协议:OpenAI</span>
+            <span style="margin-left:6px;">协议按域名自动判定。中转站默认按 OpenAI 兼容处理；如有特殊需要可在下方"高级"里强制覆盖。</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>API Key</label>
+          <input type="password" id="byo_key" placeholder="sk-..." autocomplete="off">
+          <div class="hint">密钥仅保存在本机浏览器，只用于请求上方填写的 API。</div>
+        </div>
+
+        <div class="field">
+          <label>Model</label>
+          <input type="text" id="byo_model" placeholder="gpt-4o-mini / claude-sonnet-4 / gemini-2.0-flash">
+          <div class="hint">
+            <span id="byo_vision_hint" class="byo-badge byo-badge-unknown" style="display:none;">未识别为多模态</span>
+            <span style="margin-left:6px;">填写后会自动提示是否疑似多模态模型，最终以"测试连接"为准。</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <button type="button" class="byo-test-btn" id="byo_test_btn">测试连接</button>
+            <span id="byo_test_result" class="byo-badge byo-badge-unknown" style="display:none;">未测试</span>
+          </div>
+          <div class="hint" id="byo_test_detail" style="margin-top:8px;"></div>
+        </div>
+
+        <span class="byo-advanced-toggle" id="byo_adv_toggle">▸ 高级（强制协议 / 自定义 header / PDF 模式 / 跳过探测）</span>
+        <div class="byo-advanced" id="byo_advanced">
+          <div class="field">
+            <label>强制接口协议</label>
+            <div class="byo-protocols">
+              <label><input type="radio" name="byo_force_protocol" value="auto" checked> 自动（按 URL 判定）</label>
+              <label><input type="radio" name="byo_force_protocol" value="openai"> OpenAI 兼容</label>
+              <label><input type="radio" name="byo_force_protocol" value="anthropic"> Anthropic Messages</label>
+              <label><input type="radio" name="byo_force_protocol" value="gemini"> Google Gemini</label>
+            </div>
+            <div class="hint">仅在自动判定不对时使用（如某中转站走 Anthropic 原生 schema 但域名不带 anthropic.com）。</div>
+          </div>
+          <div class="field">
+            <label>自定义请求头（每行一对 <code>Key: Value</code>，留空忽略）</label>
+            <textarea id="byo_headers" placeholder="X-Custom-Header: value"></textarea>
+            <div class="hint">用于中转站 / coding plan 需要的额外认证或路由头。</div>
+          </div>
+          <div class="field">
+            <label>PDF 处理方式</label>
+            <div class="byo-protocols">
+              <label><input type="radio" name="byo_pdf_mode" value="auto" checked> 自动（推荐）</label>
+              <label><input type="radio" name="byo_pdf_mode" value="inline"> 强制直传</label>
+              <label><input type="radio" name="byo_pdf_mode" value="image"> 强制图模式</label>
+            </div>
+            <div class="hint">"自动"优先直传 PDF，遇到"不支持"错误会记录模型能力并中止本次评级。</div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="byo_skip_probe">
+            <label for="byo_skip_probe">跳过多模态探测（已知模型支持图片时使用）</label>
+          </div>
+        </div>
+
+        <div class="byo-warning">
+          AI 评级只会发送至上方填写的 API；密钥仅保存在本机。<br>
+          自定义 AI 调用失败会中止本次评级。<br>
+          如不清楚您的 API 是否支持多模态（识别图片/PDF），请咨询您 API 提供商的技术人员。
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-save" id="btn-save">保存设置</button>
+    </div>
+
+    </div><!-- /settings-area -->
+  </div>
+
+  <div class="toast" id="toast">已保存</div>
+
+  <div class="ta-zoom-backdrop" id="ta-zoom-backdrop" role="dialog" aria-hidden="true">
+    <div class="ta-zoom-modal">
+      <div class="ta-zoom-header">
+        <span class="ta-zoom-title" id="ta-zoom-title">编辑</span>
+        <button type="button" class="ta-zoom-close" id="ta-zoom-close">✕ 关闭 (Esc)</button>
+      </div>
+      <textarea class="ta-zoom-textarea" id="ta-zoom-textarea" spellcheck="false"></textarea>
+    </div>
+  </div>
+
+  <script src="../../modules/page-api.js"></script>
+  <script src="options.js"></script>
+  <script src="ta-zoom.js"></script>
+</body>
+</html>
