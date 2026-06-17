@@ -90,7 +90,10 @@
     const storageModule = deps.storage || root.BHPStorage;
     const permissionsModule = deps.permissions || root.BHPPermissions;
     const byoProvider = deps.byoProvider || root.BHPByoProvider;
-    const netLogger = deps.netLogger || root.BHPNetLogger?.createNetLogger?.({ chrome: chromeLike }) || null;
+    const netLogger = deps.netLogger || root.BHPNetLogger?.createNetLogger?.({
+      chrome: chromeLike,
+      onLogout: (entry) => handleNetworkLogout(entry)
+    }) || null;
     const browserOps = deps.browserOps || root.BHPBrowserOps?.createBrowserOps?.({ chrome: chromeLike }) || null;
     let automation = deps.automation || null;
 
@@ -126,6 +129,101 @@
 
     async function storageRemove(keys) {
       if (chromeLike?.storage?.local?.remove) await chromeLike.storage.local.remove(keys);
+    }
+
+    function normalizeBossStatus(status = {}, previous = {}, source = 'unknown') {
+      const hasLoggedIn = Object.prototype.hasOwnProperty.call(status, 'loggedIn');
+      const loggedIn = hasLoggedIn ? Boolean(status.loggedIn) : Boolean(previous.loggedIn);
+      return {
+        loggedIn,
+        user: loggedIn ? String(status.user ?? previous.user ?? '') : String(status.user ?? ''),
+        vip: loggedIn ? Boolean(status.vip ?? previous.vip) : Boolean(status.vip ?? false),
+        newGreetingCount: Number(status.newGreetingCount ?? previous.newGreetingCount ?? 0) || 0,
+        tabCounts: status.tabCounts || previous.tabCounts || {},
+        lastCheckedAt: status.lastCheckedAt || new Date().toISOString(),
+        source
+      };
+    }
+
+    function notifyBossStatusChanged(bossStatus, reason, extra = {}) {
+      try {
+        chromeLike?.runtime?.sendMessage?.({
+          type: 'BOSS_STATUS_CHANGED',
+          payload: {
+            reason,
+            bossStatus,
+            ...extra
+          }
+        });
+      } catch (error) {
+        // Side panel refresh is best-effort; storage remains the source of truth.
+      }
+    }
+
+    async function updateBossStatus(status, reason, extra = {}) {
+      const data = await storageGet('bossStatus');
+      const bossStatus = normalizeBossStatus(status, data.bossStatus || {}, reason);
+      await storageSet({ bossStatus });
+      notifyBossStatusChanged(bossStatus, reason, extra);
+      return bossStatus;
+    }
+
+    function statusFromPagePayload(payload = {}) {
+      if (payload.bossStatus && typeof payload.bossStatus === 'object') return payload.bossStatus;
+      if (
+        Object.prototype.hasOwnProperty.call(payload, 'loggedIn') ||
+        Object.prototype.hasOwnProperty.call(payload, 'user') ||
+        Object.prototype.hasOwnProperty.call(payload, 'vip') ||
+        Object.prototype.hasOwnProperty.call(payload, 'newGreetingCount')
+      ) {
+        return payload;
+      }
+      const url = String(payload.url || '');
+      const title = String(payload.title || '');
+      if (/zhipin\.com/i.test(url) && (/login|logout/i.test(url) || /登录|注册/.test(title))) {
+        return {
+          loggedIn: false,
+          user: '',
+          vip: false,
+          newGreetingCount: 0,
+          tabCounts: {}
+        };
+      }
+      return null;
+    }
+
+    async function handlePageStatus(payload = {}) {
+      const nextStatus = statusFromPagePayload(payload);
+      if (nextStatus) {
+        await updateBossStatus(nextStatus, 'page_status', {
+          url: payload.url || '',
+          title: payload.title || ''
+        });
+      }
+      return { ok: true };
+    }
+
+    async function handleNetworkLogout(entry = {}) {
+      await netLogger?.persist?.('logout');
+      await updateBossStatus({
+        loggedIn: false,
+        user: '',
+        vip: false,
+        newGreetingCount: 0,
+        tabCounts: {},
+        lastCheckedAt: new Date().toISOString()
+      }, 'network_logout', { netLogEntry: entry });
+    }
+
+    async function getNetLogSnapshot() {
+      await netLogger?.restore?.();
+      return netLogger?.snapshot ? netLogger.snapshot() : [];
+    }
+
+    async function clearNetLogSnapshot() {
+      const result = netLogger?.clear ? netLogger.clear() : 'cleared';
+      await netLogger?.persist?.('clear');
+      return result;
     }
 
     async function getSettings() {
@@ -249,8 +347,8 @@
         storageGet('lastByoPermission'),
         getPauseState()
       ]);
-      const bossStatus = liveBossStatus || bossData.bossStatus || {};
-      if (liveBossStatus) await storageSet({ bossStatus: liveBossStatus });
+      const bossStatus = liveBossStatus ? normalizeBossStatus(liveBossStatus, bossData.bossStatus || {}, 'live_probe') : bossData.bossStatus || {};
+      if (liveBossStatus) await storageSet({ bossStatus });
       return {
         boss: {
           loggedIn: Boolean(bossStatus.loggedIn),
@@ -455,12 +553,13 @@
         case 'BYO_GENERATE_TEMPLATES': return byoGenerateTemplates(payload);
         case 'EXTRACT_VIP_FILTERS': return extractVipFilters(payload);
         case 'SNIFF_DOM': return sniffDom(payload);
-        case 'GET_NET_LOG': return netLogger?.snapshot ? netLogger.snapshot() : [];
-        case 'CLEAR_NET_LOG': return netLogger?.clear ? netLogger.clear() : 'cleared';
+        case 'GET_NET_LOG': return getNetLogSnapshot();
+        case 'CLEAR_NET_LOG': return clearNetLogSnapshot();
         case 'DEBUG_CMD':
           if (!browserOps?.handleDebugCommand) throw new Error('browser ops unavailable');
           return browserOps.handleDebugCommand(payload);
         case 'PAGE_STATUS':
+          return handlePageStatus(payload);
         case 'BHP_BRIDGE_READY':
         case 'API_RESULT':
           return { ok: true };

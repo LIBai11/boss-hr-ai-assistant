@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const settings = require('../src/modules/settings.js');
 const storage = require('../src/modules/storage.js');
 const permissions = require('../src/modules/permissions.js');
+require('../src/modules/net-logger.js');
 const { createBackground } = require('../src/background/index.js');
 
 function createFakeChrome() {
@@ -11,13 +12,18 @@ function createFakeChrome() {
   const listeners = {
     action: [],
     runtime: [],
-    alarms: []
+    alarms: [],
+    webRequestBeforeRequest: [],
+    webRequestCompleted: [],
+    webRequestBeforeRedirect: []
   };
+  const messages = [];
   const permissionOrigins = new Set();
 
   return {
     _store: store,
     _listeners: listeners,
+    _messages: messages,
     _permissionOrigins: permissionOrigins,
     runtime: {
       lastError: null,
@@ -26,7 +32,9 @@ function createFakeChrome() {
           listeners.runtime.push(fn);
         }
       },
-      sendMessage() {}
+      sendMessage(message) {
+        messages.push(message);
+      }
     },
     action: {
       onClicked: {
@@ -68,6 +76,23 @@ function createFakeChrome() {
         },
         async remove(keys) {
           for (const key of Array.isArray(keys) ? keys : [keys]) delete store[key];
+        }
+      }
+    },
+    webRequest: {
+      onBeforeRequest: {
+        addListener(fn) {
+          listeners.webRequestBeforeRequest.push(fn);
+        }
+      },
+      onCompleted: {
+        addListener(fn) {
+          listeners.webRequestCompleted.push(fn);
+        }
+      },
+      onBeforeRedirect: {
+        addListener(fn) {
+          listeners.webRequestBeforeRedirect.push(fn);
         }
       }
     },
@@ -517,4 +542,109 @@ test('background exposes live BOSS status and pause controls without server depe
 
   await app.handleCommand({ type: 'CLEAR_PAUSE_STATE' });
   assert.equal(fakeChrome._store.autoPauseState, undefined);
+});
+
+test('background updates stored BOSS status and broadcasts when page status reports login state', async () => {
+  const fakeChrome = createFakeChrome();
+  const app = createBackground({
+    chrome: fakeChrome,
+    settings,
+    storage,
+    permissions,
+    byoProvider: { testConnection: async () => ({ success: true, multimodal: false, detail: 'ok' }) }
+  });
+
+  const result = await app.handleCommand({
+    type: 'PAGE_STATUS',
+    payload: {
+      url: 'https://www.zhipin.com/web/chat/index',
+      title: 'BOSS 直聘',
+      bossStatus: {
+        loggedIn: true,
+        user: '李四 HR',
+        vip: false,
+        newGreetingCount: 2,
+        tabCounts: { 新招呼: { count: 2, hasUnread: true } },
+        lastCheckedAt: '2026-06-17T01:00:00.000Z'
+      }
+    }
+  });
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(fakeChrome._store.bossStatus.loggedIn, true);
+  assert.equal(fakeChrome._store.bossStatus.user, '李四 HR');
+  assert.equal(fakeChrome._store.bossStatus.newGreetingCount, 2);
+  assert.equal(fakeChrome._messages.at(-1).type, 'BOSS_STATUS_CHANGED');
+  assert.equal(fakeChrome._messages.at(-1).payload.reason, 'page_status');
+  assert.equal(fakeChrome._messages.at(-1).payload.bossStatus.user, '李四 HR');
+});
+
+test('background turns network logout alerts into stored logout status and side panel refresh events', async () => {
+  const fakeChrome = createFakeChrome();
+  fakeChrome._store.bossStatus = {
+    loggedIn: true,
+    user: '王五 HR',
+    vip: true,
+    newGreetingCount: 4,
+    tabCounts: { 新招呼: { count: 4 } },
+    lastCheckedAt: '2026-06-17T00:50:00.000Z'
+  };
+  const app = createBackground({
+    chrome: fakeChrome,
+    settings,
+    storage,
+    permissions,
+    byoProvider: { testConnection: async () => ({ success: true, multimodal: false, detail: 'ok' }) }
+  });
+
+  app.register();
+  fakeChrome._listeners.webRequestBeforeRequest[0]({
+    requestId: 'logout-1',
+    url: 'https://www.zhipin.com/wapi/zpgeek/friend/list.json',
+    method: 'GET',
+    timeStamp: 1000
+  });
+  fakeChrome._listeners.webRequestCompleted[0]({
+    requestId: 'logout-1',
+    url: 'https://www.zhipin.com/wapi/zpgeek/friend/list.json',
+    method: 'GET',
+    statusCode: 401,
+    timeStamp: 1125,
+    responseHeaders: []
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(fakeChrome._store.bossStatus.loggedIn, false);
+  assert.equal(fakeChrome._store.bossStatus.user, '');
+  assert.equal(fakeChrome._store.bossStatus.source, 'network_logout');
+  assert.equal(fakeChrome._store.__bhpNetLog.reason, 'logout');
+  assert.equal(fakeChrome._store.__bhpNetLog.entries.at(-1)._logout, true);
+  assert.equal(fakeChrome._messages.at(-1).type, 'BOSS_STATUS_CHANGED');
+  assert.equal(fakeChrome._messages.at(-1).payload.reason, 'network_logout');
+  assert.equal(fakeChrome._messages.at(-1).payload.bossStatus.loggedIn, false);
+});
+
+test('background GET_NET_LOG restores the last persisted snapshot after worker restart', async () => {
+  const fakeChrome = createFakeChrome();
+  fakeChrome._store.__bhpNetLog = {
+    reason: 'logout',
+    time: '2026-06-17T01:05:00.000Z',
+    entries: [
+      { ts: '01:05:00.000', method: 'GET', status: 401, duration: 125, url: 'https://www.zhipin.com/wapi/test', _logout: true }
+    ]
+  };
+  const app = createBackground({
+    chrome: fakeChrome,
+    settings,
+    storage,
+    permissions,
+    byoProvider: { testConnection: async () => ({ success: true, multimodal: false, detail: 'ok' }) }
+  });
+
+  app.register();
+  const snapshot = await app.handleCommand({ type: 'GET_NET_LOG' });
+
+  assert.equal(snapshot.length, 1);
+  assert.equal(snapshot[0].status, 401);
+  assert.equal(snapshot[0]._logout, true);
 });

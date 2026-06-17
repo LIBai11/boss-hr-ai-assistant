@@ -56,8 +56,10 @@
     const maxEntries = options.maxEntries || 150;
     const debugBodies = Boolean(options.debugBodies);
     const chromeLike = options.chrome || root.chrome;
+    const onLogout = typeof options.onLogout === 'function' ? options.onLogout : null;
     const pending = new Map();
     const entries = [];
+    let restorePromise = null;
 
     function push(entry) {
       entries.push(entry);
@@ -100,6 +102,16 @@
       delete entry.startedAt;
       if (isLogout(entry)) entry._logout = true;
       push(entry);
+      if (entry._logout) {
+        persist('logout')?.catch?.(() => {});
+        if (onLogout) {
+          try {
+            Promise.resolve(onLogout(entry)).catch(() => {});
+          } catch (error) {
+            // Logout notification is best-effort; the network snapshot is still kept.
+          }
+        }
+      }
       return entry;
     }
 
@@ -132,8 +144,31 @@
       return payload;
     }
 
+    async function restore() {
+      if (!chromeLike?.storage?.local) return snapshot();
+      if (!restorePromise) {
+        restorePromise = (async () => {
+          const data = await chromeLike.storage.local.get(STORAGE_KEY);
+          const savedEntries = Array.isArray(data?.[STORAGE_KEY]?.entries) ? data[STORAGE_KEY].entries : [];
+          if (!savedEntries.length) return snapshot();
+          const seen = new Set(entries.map((entry) => `${entry.id || ''}|${entry.ts || ''}|${entry.status || ''}|${entry.url || ''}`));
+          for (const entry of savedEntries) {
+            if (!entry || typeof entry !== 'object') continue;
+            const key = `${entry.id || ''}|${entry.ts || ''}|${entry.status || ''}|${entry.url || ''}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            entries.push({ ...entry });
+          }
+          while (entries.length > maxEntries) entries.shift();
+          return snapshot();
+        })().catch(() => snapshot());
+      }
+      return restorePromise;
+    }
+
     function register() {
       const filter = { urls: ['*://*.zhipin.com/*'] };
+      restore()?.catch?.(() => {});
       chromeLike?.webRequest?.onBeforeRequest?.addListener?.(onBeforeRequest, filter, ['requestBody']);
       chromeLike?.webRequest?.onCompleted?.addListener?.(onCompleted, filter, ['responseHeaders']);
       chromeLike?.webRequest?.onBeforeRedirect?.addListener?.(onBeforeRedirect, filter, ['responseHeaders']);
@@ -147,6 +182,7 @@
       onCompleted,
       persist,
       register,
+      restore,
       snapshot
     };
     return api;
